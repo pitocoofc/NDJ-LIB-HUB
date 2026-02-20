@@ -3,6 +3,7 @@
 const https = require('https');
 const fs = require('fs');
 const readline = require('readline');
+const path = require('path');
 
 const repoBase = "https://raw.githubusercontent.com/pitocoofc/NDJ-LIB-version/main";
 const versoes = {
@@ -14,88 +15,52 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 
 const args = process.argv.slice(2);
 if (args[0] !== 'portal') {
-    console.log("\nUso: ./ndj portal");
-    process.exit();
+    console.log("\n❌ Erro: Use o comando: ./ndj portal");
+    process.exit(0);
 }
 
-console.log("\n--- NDJ PORTAL ---");
+console.log(`
+=========================================
+      NDJ-LIB PORTAL - FULL EDITION      
+=========================================
+`);
+
 Object.keys(versoes).forEach(key => {
-    console.log(`[${key}] v${versoes[key].nome} (${versoes[key].size})`);
+    console.log(`[${key}] Versão ${versoes[key].nome} (${versoes[key].size})`);
 });
 
-rl.question("\nOpção: ", (opt) => {
-    const v = versoes[opt];
-    if (!v) {
-        console.log("Saindo...");
-        process.exit();
-    }
-
-    const fileUrl = `${repoBase}/${v.folder}/index.js`;
-    const fileStream = fs.createWriteStream("index.js");
-
-    console.log(`Baixando v${v.nome}...`);
-
-    https.get(fileUrl, (res) => {
-        if (res.statusCode !== 200) {
-            console.log("Erro: " + res.statusCode);
-            process.exit();
-        }
-        res.pipe(fileStream);
-        fileStream.on('finish', () => {
-            fileStream.close();
-            console.log("✅ Pronto!");
-            process.exit();
-        });
-    }).on('error', (err) => {
-        console.log("Erro: " + err.message);
-        process.exit();
-    });
-});
+rl.question("\nDigite o número da versão (ou 'sair'): ", (opt) => {
+    if (opt.toLowerCase() === 'sair') process.exit(0);
     
     const v = versoes[opt];
     if (!v) {
-        console.log("Opção inválida!");
-        process.exit();
+        console.log("❌ Opção inválida!");
+        process.exit(0);
     }
 
-    rl.question(`\nConfirmar download da v${v.nome}? (s/n): `, (res) => {
-        if (res.toLowerCase() !== 's') {
-            console.log("Operação cancelada.");
-            process.exit();
-        }
+    const destPath = path.join(process.cwd(), "index.js");
+    const fileUrl = `${repoBase}/${v.folder}/index.js`;
+    const fileStream = fs.createWriteStream(destPath);
 
-        const fileUrl = `${repoBase}/${v.folder}/index.js`;
-        const fileStream = fs.createWriteStream("index.js");
-
-        console.log(`\nIniciando transferência...`);
-
-        https.get(fileUrl, (response) => {
-            if (response.statusCode !== 200) {
-                console.log(`Erro no servidor: Status ${response.statusCode}`);
-                process.exit();
-            }
-
-            // Pipe direto para o disco para economizar RAM
-            response.pipe(fileStream);
-
-            fileStream.on('finish', () => {
-                fileStream.close();
-                console.log(`\n✅ v${v.nome} instalada com sucesso!`);
-                console.log("Agora você pode iniciar com: node index.js");
-                process.exit();
-            });
-        }).on('error', (err) => {
-            console.error("Erro de conexão: " + err.message);
-            process.exit();
-        });
-    });
-});
+    console.log(`\n📥 Baixando v${v.nome} de NDJ-LIB-version...`);
 
     https.get(fileUrl, (res) => {
+        if (res.statusCode !== 200) {
+            console.log(`❌ Erro no Servidor: ${res.statusCode}`);
+            process.exit(1);
+        }
+
         res.pipe(fileStream);
+
         fileStream.on('finish', () => {
-            console.log(`\n✅ v${v.nome} instalada com sucesso!`);
-            process.exit();
+            fileStream.close();
+            console.log("✅ Instalação concluída com sucesso!");
+            console.log(`📂 Arquivo salvo em: ${destPath}`);
+            console.log("🚀 Inicie com: node index.js");
+            process.exit(0);
         });
+    }).on('error', (err) => {
+        console.log("❌ Erro de conexão: " + err.message);
+        process.exit(1);
     });
-}
+});
