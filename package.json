@@ -1,0 +1,7 @@
+{
+  "name": "ndj-lib-lite",
+  "version": "1.0.0",
+  "bin": {
+    "dnt": "./dnt.js"
+  }
+}
