@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const readline = require('readline');
 
-const repoBase = "https://raw.githubusercontent.com/pitocoofc/NDJ-LIB-version/main";
+const repoBase = "https://raw.githubusercontent.com/pitocoofc/NDJ-LIB-versions/main";
 const versoes = {
     "1": { nome: "1.0.9", folder: "1.0.9", desc: "Versão Estável (Recomendada)" },
     "2": { nome: "1.1.0-Canary", folder: "1.1.0-Canary", desc: "Novos Recursos (Instável)" }
