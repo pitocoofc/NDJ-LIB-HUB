@@ -3,8 +3,8 @@
 const https = require('https');
 const fs = require('fs');
 const readline = require('readline');
-const path = require('path');
 
+// Configuração apontando para o seu repositório de versões
 const repoBase = "https://raw.githubusercontent.com/pitocoofc/NDJ-LIB-version/main";
 const versoes = {
     "1": { nome: "1.0.9", folder: "1.0.9", size: "1.2MB" },
@@ -15,48 +15,37 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 
 const args = process.argv.slice(2);
 if (args[0] !== 'portal') {
-    console.log("\n❌ Erro: Use o comando: ./ndj portal");
+    console.log("\n❌ Use: node ndj.js portal");
     process.exit(0);
 }
 
-console.log(`
-=========================================
-      NDJ-LIB PORTAL - FULL EDITION      
-=========================================
-`);
-
+console.log("\n--- NDJ-LIB: PORTAL DE INSTALAÇÃO ---");
 Object.keys(versoes).forEach(key => {
-    console.log(`[${key}] Versão ${versoes[key].nome} (${versoes[key].size})`);
+    console.log(`[${key}] Versão ${versoes[key].nome} - Tamanho: ${versoes[key].size}`);
 });
 
-rl.question("\nDigite o número da versão (ou 'sair'): ", (opt) => {
-    if (opt.toLowerCase() === 'sair') process.exit(0);
-    
+rl.question("\nSelecione o número da versão: ", (opt) => {
     const v = versoes[opt];
     if (!v) {
-        console.log("❌ Opção inválida!");
+        console.log("Saindo...");
         process.exit(0);
     }
 
-    const destPath = path.join(process.cwd(), "index.js");
+    // O arquivo será baixado na pasta onde o usuário está
     const fileUrl = `${repoBase}/${v.folder}/index.js`;
-    const fileStream = fs.createWriteStream(destPath);
+    const fileStream = fs.createWriteStream("index.js");
 
-    console.log(`\n📥 Baixando v${v.nome} de NDJ-LIB-version...`);
+    console.log(`\n📥 Puxando v${v.nome} do repositório 'version'...`);
 
     https.get(fileUrl, (res) => {
         if (res.statusCode !== 200) {
-            console.log(`❌ Erro no Servidor: ${res.statusCode}`);
+            console.log("❌ Erro ao acessar o GitHub: " + res.statusCode);
             process.exit(1);
         }
-
         res.pipe(fileStream);
-
         fileStream.on('finish', () => {
             fileStream.close();
-            console.log("✅ Instalação concluída com sucesso!");
-            console.log(`📂 Arquivo salvo em: ${destPath}`);
-            console.log("🚀 Inicie com: node index.js");
+            console.log("✅ Sucesso! O arquivo 'index.js' foi gerado.");
             process.exit(0);
         });
     }).on('error', (err) => {
