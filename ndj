@@ -1,0 +1,20 @@
+#!/bin/bash
+# dnt - Gerenciador de Módulos DNT
+
+if [ "$1" == "portal" ]; then
+    REPO=$2
+    FOLDER_NAME=$(echo $REPO | cut -d'/' -f2)
+    
+    echo "📥 Buscando módulo no GitHub: $REPO..."
+    mkdir -p modules
+    
+    # Se a pasta já existir, remove para atualizar
+    rm -rf "./modules/$FOLDER_NAME"
+    
+    git clone "https://github.com/$REPO.git" "./modules/$FOLDER_NAME"
+    
+    # O AJUSTE ESTÁ AQUI: Apontando para a pasta correta dentro de node_modules
+    node -e "require('./node_modules/easy-djs-bot/src/Client').checkModule('./modules/$FOLDER_NAME')"
+else
+    echo "Uso: ./dnt install usuario/repositorio"
+fi
