@@ -31,6 +31,10 @@ Desenvolvido com foco em otimização por ghost ou pitocoofc. 👾
 
 
 
-O instalador da NDJ não se qualifica na licença MIT e é de uso exclusivo ou sobre a licença GGP
+## 🛡️ Licença e Direitos
 
-
+Este projeto está licenciado sob a **GNU General Public License v3.0 (GPL-3.0)**. 
+Isso significa que:
+- Você pode modificar e distribuir este código.
+- **Obrigatório**: Qualquer trabalho derivado deve manter o código aberto e usar a mesma licença GPL.
+- Respeite o autor: **pitocoofc**.
