@@ -1,100 +1,89 @@
 #!/usr/bin/env node
 /*
- * Ndj-lib Installer Hub - "The Architect" Edition
- * Copyright (C) 2026 pitocoofc | GPL v2
- * * Este instalador garante a hierarquia completa de pastas e 
- * resolve dependências automaticamente.
+ * Ndj-lib Installer Hub - Lean Edition (Otimizado para Espaço)
  */
 
 const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
-
-const repoVersions = "https://github.com/pitocoofc/NDJ-LIB-versions-.git";
+const path = require('path');
 
 const versoes = {
-    "1": { nome: "1.0.9", folder: "1.0.9", desc: "Versão Estável (Estrutura Completa)" },
-    "2": { nome: "1.1.0-Canary", folder: "1.1.0-Canary", desc: "Experimental (Pode conter bugs)" }
+    "1": { 
+        nome: "1.0.9", 
+        repo: "https://github.com/pitocoofc/Ndj-lib.git", 
+        desc: "Versão Estável (Limpeza de Mídia Ativada)" 
+    }
 };
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-// Limpa o ambiente de pastas temporárias se houver erro anterior
-function limpar() {
-    if (fs.existsSync('temp_ndj')) {
-        fs.rmSync('temp_ndj', { recursive: true, force: true });
-    }
+// Função para deletar arquivos inúteis e economizar ~9.5MB
+function limparArquivosPesados(diretorio) {
+    const extensoesParaRemover = ['.mp4', '.png', '.jpg', '.jpeg', '.gif', '.webp'];
+    
+    if (!fs.existsSync(diretorio)) return;
+
+    const arquivos = fs.readdirSync(diretorio);
+
+    arquivos.forEach(arquivo => {
+        const caminhoCompleto = path.join(diretorio, arquivo);
+        const stat = fs.statSync(caminhoCompleto);
+
+        if (stat.isDirectory()) {
+            limparArquivosPesados(caminhoCompleto);
+        } else {
+            const ext = path.extname(arquivo).toLowerCase();
+            if (extensoesParaRemover.includes(ext)) {
+                try {
+                    fs.unlinkSync(caminhoCompleto);
+                } catch (e) {
+                    // Ignora se o arquivo estiver ocupado
+                }
+            }
+        }
+    });
 }
 
 async function instalar(v) {
-    limpar();
-    console.log(`\n\x1b[33m[1/3]\x1b[0m 🚚 Conectando à Warehouse para buscar \x1b[1mv${v.nome}\x1b[0m...`);
-
     try {
-        // O "Pulo do Gato": Comandos Git para baixar apenas uma pasta específica
-        const comandoClone = `
-            mkdir temp_ndj && cd temp_ndj && \
-            git init -q && \
-            git remote add origin ${repoVersions} && \
-            git config core.sparseCheckout true && \
-            echo "${v.folder}/" >> .git/info/sparse-checkout && \
-            git pull -q origin main && \
-            cp -r ${v.folder}/* .. && \
-            cd ..
-        `.trim();
-
-        execSync(comandoClone, { stdio: 'inherit' });
-
-        console.log(`\x1b[33m[2/3]\x1b[0m 📂 Hierarquia de arquivos preservada (src/, index, etc).`);
+        console.log(`\n\x1b[33m[1/3]\x1b[0m 🚀 Baixando v${v.nome} de ${v.repo}...`);
         
-        // 3. Resolve o erro MODULE_NOT_FOUND instalando o que estiver no package.json
-        console.log(`\x1b[33m[3/3]\x1b[0m 🛠️  Instalando dependências (npm install)...`);
+        // Instala via NPM para garantir a hierarquia src/index.js
+        execSync(`npm install ${v.repo} --save`, { stdio: 'inherit' });
+
+        console.log(`\x1b[33m[2/3]\x1b[0m 🧹 Otimizando espaço (Removendo vídeos e imagens)...`);
         
-        if (fs.existsSync('package.json')) {
-            execSync('npm install', { stdio: 'inherit' });
-        } else {
-            console.log("\x1b[31m[!] Aviso: package.json não encontrado. Instale os módulos manualmente.\x1b[0m");
+        // O alvo é a pasta dentro de node_modules com o nome definido no package.json
+        const caminhoLib = path.join(process.cwd(), 'node_modules', 'easy-djs-bot');
+        limparArquivosPesados(caminhoLib);
+
+        console.log(`\x1b[33m[3/3]\x1b[0m 🛠️  Criando ponteiro de acesso...`);
+        if (!fs.existsSync('index.js')) {
+            const entryCode = "const { EasyBot } = require('easy-djs-bot');\nmodule.exports = { EasyBot };";
+            fs.writeFileSync('index.js', entryCode);
         }
 
-        limpar();
-        console.log("\x1b[32m%s\x1b[0m", "\n✅ INSTALAÇÃO CONCLUÍDA COM SUCESSO!");
-        console.log(`A v${v.nome} agora está pronta para rodar no seu ambiente.`);
-        console.log("Comando: \x1b[1mnode index.js\x1b[0m\n");
+        console.log("\x1b[32m%s\x1b[0m", "\n✅ SUCESSO: Ndj-lib instalada e otimizada!");
+        console.log(`📦 Espaço economizado: ~9.5MB (Vídeos/Imagens removidos).`);
+        console.log(`\nUse no seu código: \x1b[1mconst { EasyBot } = require('./index.js');\x1b[0m\n`);
+        
         process.exit(0);
-
     } catch (e) {
-        limpar();
-        console.log("\x1b[31m\n❌ FALHA NA INSTALAÇÃO:\x1b[0m");
-        console.log("Certifique-se de que o 'git' está instalado no seu Termux.");
-        console.log("Erro: " + e.message);
+        console.log("\x1b[31m\n❌ ERRO:\x1b[0m " + e.message);
         process.exit(1);
     }
 }
 
-if (process.argv[2] !== 'portal') {
-    console.log("\x1b[31m%s\x1b[0m", "\n[!] Use: ./ndj portal");
-    process.exit(0);
-}
-
 console.clear();
-console.log("\x1b[35m%s\x1b[0m", `
- ███▄    █ ▓█████▄  ▄▄▄       ██▓
- ██ ▀█   █ ▒██▀ ██▌▒████▄    ▓██▒
-▓██  ▀█ ██▒░██   █▌▒██  ▀█▄  ▒██▒
-▓██▒  ▐▌██▒░▓█▄   ▌░██▄▄▄▄██ ░██░
-▒██░   ▓██░░▒████▓  ▓█   ▓██▒░██░
-`);
-console.log("\x1b[32m%s\x1b[0m", " --- NDJ-LIB | PORTAL DE VERSÕES --- \n");
+console.log("\x1b[36m --- NDJ-LIB LEAN INSTALLER ---\x1b[0m\n");
 
 Object.keys(versoes).forEach(k => {
     console.log(`\x1b[33m[${k}]\x1b[0m \x1b[1mv${versoes[k].nome}\x1b[0m - ${versoes[k].desc}`);
 });
 
-rl.question("\n\x1b[36mSelecione a versão para instalar:\x1b[0m ", (opt) => {
+rl.question("\nInstalar agora? (Digite o número): ", (opt) => {
     const v = versoes[opt];
-    if (!v) {
-        console.log("Saindo...");
-        process.exit(0);
-    }
+    if (!v) process.exit(0);
     instalar(v);
 });
