@@ -20,7 +20,7 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 
 // Função para deletar arquivos inúteis e economizar ~9.5MB
 function limparArquivosPesados(diretorio) {
-    const extensoesParaRemover = ['.mp4', '.png', '.jpg', '.jpeg', '.gif', '.webp'];
+    const extensoesParaRemover = ['.mp4', '.png', '.jpg', '.jpeg', '.md', '.html', '.gif', '.webp'];
     
     if (!fs.existsSync(diretorio)) return;
 
